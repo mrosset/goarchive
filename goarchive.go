@@ -4,27 +4,33 @@ import (
 	"archive/tar"
 	"compress/bzip2"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"os"
 	"path"
 )
 
-const (
-	ISDIR  = 53
-	ISFILE = 0
-	DMASK  = 0755
-	RMASK  = 0000
-	FMASK  = 0644
+
+var (
+	Debug = false
 )
+
+
+const (
+	DMASK = 0755
+	RMASK = 0000
+	FMASK = 0644
+)
+
 
 // Decompress bzip2 or gzip file to destination directory
 func Untar(file string, dest string) (err os.Error) {
+	var cr io.Reader
 	f, err := os.Open(file, os.O_RDONLY, RMASK)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	var cr io.Reader
 	switch path.Ext(file) {
 	case ".bz2":
 		cr = bzip2.NewReader(f)
@@ -45,25 +51,25 @@ func Untar(file string, dest string) (err os.Error) {
 		if hdr == nil {
 			break
 		}
+		if Debug {
+			fmt.Printf("%v %v\n", hdr.Name, hdr.Typeflag)
+		}
 		fpath := path.Join(dest, hdr.Name)
 		fmask := uint32(hdr.Mode)
-		if hdr.Typeflag == ISDIR {
+		if hdr.Typeflag == tar.TypeDir {
 			if err := os.Mkdir(fpath, uint32(hdr.Mode)); err != nil {
 				return err
 			}
 			continue
 		}
-		if hdr.Typeflag == ISFILE {
-			f, err := os.Open(fpath, os.O_WRONLY|os.O_CREAT, fmask)
-			if err != nil {
-				return err
-			}
-			_, err = io.Copy(f, tr)
-			if err != nil {
-				f.Close()
-				return err
-			}
-			f.Close()
+		f, err := os.Open(fpath, os.O_WRONLY|os.O_CREAT, fmask)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(f, tr)
+		f.Close()
+		if err != nil {
+			return err
 		}
 	}
 	return
