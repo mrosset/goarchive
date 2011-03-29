@@ -11,22 +11,22 @@ import (
 )
 
 
-var (
-	Debug = false
-)
+// Struct used to decompress 
+type Zip struct {
+	Verbose bool
+}
 
 
-const (
-	DMASK = 0755
-	RMASK = 0000
-	FMASK = 0644
-)
+// Returns a new Zip struct
+func NewZip() *Zip {
+	return new(Zip)
+}
 
 
-// Decompress bzip2 or gzip file to destination directory
-func Untar(file string, dest string) (err os.Error) {
+// Decompress bzip2 or gzip tarball to destination directory
+func (t *Zip) Decompress(file string, dest string) (err os.Error) {
 	var cr io.Reader
-	f, err := os.Open(file, os.O_RDONLY, RMASK)
+	f, err := os.Open(file, os.O_RDONLY, 0000)
 	if err != nil {
 		return err
 	}
@@ -51,8 +51,8 @@ func Untar(file string, dest string) (err os.Error) {
 		if hdr == nil {
 			break
 		}
-		if Debug {
-			fmt.Printf("%v %v\n", hdr.Name, hdr.Typeflag)
+		if t.Verbose {
+			fmt.Printf("%v\n", hdr.Name)
 		}
 		fpath := path.Join(dest, hdr.Name)
 		fmask := uint32(hdr.Mode)
