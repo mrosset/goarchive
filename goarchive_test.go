@@ -1,24 +1,102 @@
 package goarchive
 
 import (
+	. "fmt"
 	"os"
 	"testing"
 )
 
-//TODO: change this test to work on more then just my machine
-func TestDecompress(t *testing.T) {
-	tmpdir := "./tmp"
-	fi, err := os.Stat(tmpdir)
-	if err == nil {
-		if fi.IsDirectory() {
-			os.RemoveAll(tmpdir)
+var tmpDir = "./tmp"
+
+// setup tmpDir for decompressions
+func init () {
+	if fileExists(tmpDir) {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			Printf("%v\n",err)
+			os.Exit(1)
 		}
 	}
-	os.Mkdir(tmpdir, 0755)
-	zip := NewZip()
-	err = zip.Decompress("/home/strings/via/cache/gmp-5.0.1.tar.bz2", "./tmp")
+	err := os.Mkdir(tmpDir,0755)
 	if err != nil {
-		t.Errorf("Error: ", err)
+	Printf("%v\n",err)
+	os.Exit(1)
 	}
-	err = zip.Decompress("/home/strings/via/cache/ppl-0.11.2.tar.gz", "./tmp")
+}
+
+
+// Test struct
+type testZip struct {
+	name       string
+	zipFile    string
+	dir        string
+	file       string
+	data       string
+	linkSrc    string
+	linkTarget string
+	longPath   string
+}
+
+var gzipTest = &testZip{
+	name:       "gzip",
+	zipFile:    "testdata/gzip.tar.gz",
+	dir:        "directory",
+	file:       "small.txt",
+	data:       "small2.txt",
+	linkSrc:    "src",
+	linkTarget: "target",
+}
+
+var bzip2Test = &testZip{
+	name:       "bzip2",
+	zipFile:    "testdata/bzip2.tar.bz2",
+	dir:        "directory",
+	file:       "small.txt",
+	data:       "small2.txt",
+	linkSrc:    "src",
+	linkTarget: "target",
+}
+
+var longLinkTest = &testZip{
+	name:       "longlink",
+	zipFile:    "testdata/longlink.tar.bz2",
+	dir:        "directory",
+	file:       "small.txt",
+	data:       "small2.txt",
+	linkSrc:    "src",
+	linkTarget: "target",
+	longPath:   "0123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100",
+}
+
+var tests = []*testZip{
+	gzipTest,
+	bzip2Test,
+	longLinkTest,
+}
+
+// Loop through each test and test for decompression
+// TODO: test each test struct field
+func TestDecompress(t *testing.T) {
+	for _,zt := range tests {
+		zip,err := NewZip(zt.zipFile)
+		if err != nil {
+			t.Errorf("NewZip %v : Unexpected error: %v",zt.name,err)
+		}
+		if err := zip.Decompress(tmpDir); err != nil {
+			t.Errorf("Decompress %v : Unexpected error: %v",zt.name,err)
+		}
+	}
+}
+
+
+// helper function to test if file/directory exists
+func fileExists(path string) bool {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	if fi.IsRegular() || fi.IsDirectory() {
+		return true
+	}
+	return false
 }
