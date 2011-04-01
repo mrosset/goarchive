@@ -4,7 +4,7 @@ TARG=goarchive
 GOFILES=goarchive.go
 GOFMT=gofmt -l -w
 
-CLEANFILES+=./tmp ./test
+CLEANFILES+=./tmp
 
 include $(GOROOT)/src/Make.pkg
 
