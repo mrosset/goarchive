@@ -12,3 +12,6 @@ format:
 	${GOFMT} *.go
 
 all:
+
+gotar:
+	make -C $@

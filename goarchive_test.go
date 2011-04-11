@@ -9,18 +9,18 @@ import (
 var tmpDir = "./tmp"
 
 // setup tmpDir for decompressions
-func init () {
+func init() {
 	if fileExists(tmpDir) {
 		err := os.RemoveAll(tmpDir)
 		if err != nil {
-			Printf("%v\n",err)
+			Printf("%v\n", err)
 			os.Exit(1)
 		}
 	}
-	err := os.Mkdir(tmpDir,0755)
+	err := os.Mkdir(tmpDir, 0755)
 	if err != nil {
-	Printf("%v\n",err)
-	os.Exit(1)
+		Printf("%v\n", err)
+		os.Exit(1)
 	}
 }
 
@@ -77,26 +77,26 @@ var tests = []*testZip{
 // Loop through each test and test for decompression
 // TODO: test each test struct field
 func TestDecompress(t *testing.T) {
-	for _,zt := range tests {
-		zip,err := NewZip(zt.zipFile)
+	for _, zt := range tests {
+		zip, err := NewZip(zt.zipFile)
 		if err != nil {
-			t.Errorf("NewZip %v : Unexpected error: %v",zt.name,err)
+			t.Errorf("NewZip %v : Unexpected error: %v", zt.name, err)
 		}
 		if err := zip.Decompress(tmpDir); err != nil {
-			t.Errorf("Decompress %v : Unexpected error: %v",zt.name,err)
+			t.Errorf("Decompress %v : Unexpected error: %v", zt.name, err)
 		}
 	}
 }
 
+func TestPeek(t *testing.T) {
+	for _, zt := range tests {
+		zip, err := NewZip(zt.zipFile)
+		if err != nil {
+			t.Errorf("NewZip %v : Unexpected error: %v", zt.name, err)
+		}
+		if dir,_ := zip.Peek(); dir != zt.name {
+			t.Errorf("Peek expected %v got %v", zt.name, dir)
+		}
+	}
 
-// helper function to test if file/directory exists
-func fileExists(path string) bool {
-	fi, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	if fi.IsRegular() || fi.IsDirectory() {
-		return true
-	}
-	return false
 }
