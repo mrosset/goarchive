@@ -1,8 +1,12 @@
 package goarchive
 
 import (
-	. "fmt"
+	"compress/bzip2"
+	"compress/gzip"
+	"fmt"
+	"io"
 	"os"
+	"path"
 	"testing"
 )
 
@@ -13,17 +17,16 @@ func init() {
 	if fileExists(tmpDir) {
 		err := os.RemoveAll(tmpDir)
 		if err != nil {
-			Printf("%v\n", err)
+			printf("%v\n", err)
 			os.Exit(1)
 		}
 	}
 	err := os.Mkdir(tmpDir, 0755)
 	if err != nil {
-		Printf("%v\n", err)
+		printf("%v\n", err)
 		os.Exit(1)
 	}
 }
-
 
 // Test struct
 type testZip struct {
@@ -74,15 +77,25 @@ var tests = []*testZip{
 	longLinkTest,
 }
 
+var printf = fmt.Printf
+
 // Loop through each test and test for decompression
 // TODO: test each test struct field
 func TestDecompress(t *testing.T) {
 	for _, zt := range tests {
-		zip, err := NewZip(zt.zipFile)
-		if err != nil {
-			t.Errorf("NewZip %v : Unexpected error: %v", zt.name, err)
+		zip := NewZip()
+		var cr io.Reader
+		f, err := os.Open(zt.zipFile)
+		handleError(err, t)
+		defer f.Close()
+		switch path.Ext(zt.zipFile) {
+		case ".bz2":
+			cr = bzip2.NewReader(f)
+		case ".gz":
+			cr, err = gzip.NewReader(f)
+			handleError(err, t)
 		}
-		if err := zip.Decompress(tmpDir); err != nil {
+		if err := zip.Decompress(tmpDir, cr); err != nil {
 			t.Errorf("Decompress %v : Unexpected error: %v", zt.name, err)
 		}
 	}
@@ -90,13 +103,27 @@ func TestDecompress(t *testing.T) {
 
 func TestPeek(t *testing.T) {
 	for _, zt := range tests {
-		zip, err := NewZip(zt.zipFile)
-		if err != nil {
-			t.Errorf("NewZip %v : Unexpected error: %v", zt.name, err)
+		zip := NewZip()
+		var cr io.Reader
+		f, err := os.Open(zt.zipFile)
+		handleError(err, t)
+		defer f.Close()
+		switch path.Ext(zt.zipFile) {
+		case ".bz2":
+			cr = bzip2.NewReader(f)
+		case ".gz":
+			cr, err = gzip.NewReader(f)
+			handleError(err, t)
 		}
-		if dir,_ := zip.Peek(); dir != zt.name {
+		if dir, _ := zip.Peek(cr); dir != zt.name {
 			t.Errorf("Peek expected %v got %v", zt.name, dir)
 		}
 	}
 
+}
+
+func handleError(err os.Error, t *testing.T) {
+	if err != nil {
+		t.Error(err)
+	}
 }

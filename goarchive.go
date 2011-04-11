@@ -3,51 +3,24 @@ package goarchive
 import (
 	"archive/tar"
 	"bytes"
-	"compress/bzip2"
-	"compress/gzip"
 	. "fmt"
 	"io"
 	"os"
 	"path"
 )
 
-
 // Struct used to decompress 
 type Zip struct {
-	path    string
 	Verbose bool
 	Debug   bool
 }
 
-
 // Returns a new Zip struct
-func NewZip(p string) (*Zip, os.Error) {
-	if p == "" {
-		return nil, os.NewError("path: empty")
-	}
-	z := new(Zip)
-	z.path = p
-	return z, nil
+func NewZip() *Zip {
+	return new(Zip)
 }
 
-func (z *Zip) Peek() (dir string, err os.Error) {
-	var cr io.Reader
-	f, err := os.Open(z.path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	switch path.Ext(z.path) {
-	case ".bz2":
-		cr = bzip2.NewReader(f)
-	case ".gz":
-		cr, err = gzip.NewReader(f)
-		if err != nil {
-			return "", err
-		}
-	default:
-		return "", os.NewError("unable to determine filetype")
-	}
+func (z *Zip) Peek(cr io.Reader) (dir string, err os.Error) {
 	tr := tar.NewReader(cr)
 	hdr, err := tr.Next()
 	if err != nil && err != os.EOF {
@@ -56,25 +29,8 @@ func (z *Zip) Peek() (dir string, err os.Error) {
 	return path.Clean(hdr.Name), nil
 }
 
-// Decompress bzip2 or gzip tarball to destination directory
-func (z *Zip) Decompress(dest string) (err os.Error) {
-	var cr io.Reader
-	f, err := os.Open(z.path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	switch path.Ext(z.path) {
-	case ".bz2":
-		cr = bzip2.NewReader(f)
-	case ".gz":
-		cr, err = gzip.NewReader(f)
-		if err != nil {
-			return err
-		}
-	default:
-		return os.NewError("unable to determine filetype")
-	}
+// Decompress bzip2 or gzip Reader to destination directory
+func (z *Zip) Decompress(dest string, cr io.Reader) (err os.Error) {
 	tr := tar.NewReader(cr)
 	for {
 		hdr, err := tr.Next()
@@ -142,7 +98,6 @@ func (z *Zip) Decompress(dest string) (err os.Error) {
 	return
 }
 
-
 // Make directory with permission
 func mkDir(path string, mode int64) (err os.Error) {
 	if !fileExists(path) {
@@ -152,7 +107,6 @@ func mkDir(path string, mode int64) (err os.Error) {
 	}
 	return
 }
-
 
 // Write file from tar reader
 func writeFile(path string, hdr *tar.Header, tr *tar.Reader) (err os.Error) {
