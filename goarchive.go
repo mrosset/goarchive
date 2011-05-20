@@ -10,17 +10,17 @@ import (
 )
 
 // Struct used to decompress 
-type Zip struct {
+type Tar struct {
 	Verbose bool
 	Debug   bool
 }
 
 // Returns a new Zip struct
-func NewZip() *Zip {
-	return new(Zip)
+func NewTar() *Tar {
+	return new(Tar)
 }
 
-func (z *Zip) Peek(cr io.Reader) (dir string, err os.Error) {
+func (z *Tar) Peek(cr io.Reader) (dir string, err os.Error) {
 	tr := tar.NewReader(cr)
 	hdr, err := tr.Next()
 	if err != nil && err != os.EOF {
@@ -30,7 +30,7 @@ func (z *Zip) Peek(cr io.Reader) (dir string, err os.Error) {
 }
 
 // Decompress bzip2 or gzip Reader to destination directory
-func (z *Zip) Decompress(dest string, cr io.Reader) (err os.Error) {
+func (z *Tar) Untar(dest string, cr io.Reader) (err os.Error) {
 	tr := tar.NewReader(cr)
 	for {
 		hdr, err := tr.Next()
@@ -125,7 +125,7 @@ func writeFile(path string, hdr *tar.Header, tr *tar.Reader) (err os.Error) {
 }
 
 
-func (z *Zip) pVerbose(path string) {
+func (z *Tar) pVerbose(path string) {
 	if z.Verbose {
 		Printf("%v\n", path)
 	}

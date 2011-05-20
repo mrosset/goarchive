@@ -83,7 +83,7 @@ var printf = fmt.Printf
 // TODO: test each test struct field
 func TestDecompress(t *testing.T) {
 	for _, zt := range tests {
-		zip := NewZip()
+		tar := NewTar()
 		var cr io.Reader
 		f, err := os.Open(zt.zipFile)
 		handleError(err, t)
@@ -95,7 +95,7 @@ func TestDecompress(t *testing.T) {
 			cr, err = gzip.NewReader(f)
 			handleError(err, t)
 		}
-		if err := zip.Decompress(tmpDir, cr); err != nil {
+		if err := tar.Untar(tmpDir, cr); err != nil {
 			t.Errorf("Decompress %v : Unexpected error: %v", zt.name, err)
 		}
 	}
@@ -103,7 +103,7 @@ func TestDecompress(t *testing.T) {
 
 func TestPeek(t *testing.T) {
 	for _, zt := range tests {
-		zip := NewZip()
+		tar := NewTar()
 		var cr io.Reader
 		f, err := os.Open(zt.zipFile)
 		handleError(err, t)
@@ -115,7 +115,7 @@ func TestPeek(t *testing.T) {
 			cr, err = gzip.NewReader(f)
 			handleError(err, t)
 		}
-		if dir, _ := zip.Peek(cr); dir != zt.name {
+		if dir, _ := tar.Peek(cr); dir != zt.name {
 			t.Errorf("Peek expected %v got %v", zt.name, dir)
 		}
 	}
