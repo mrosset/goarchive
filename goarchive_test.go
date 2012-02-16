@@ -84,7 +84,7 @@ func TestDecompress(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if err := tar.Untar(tmpDir, cr); err != nil {
+		if err := tar.Untar(cr, tmpDir); err != nil {
 			t.Errorf("Decompress %v : Unexpected error: %v", zt.name, err)
 		}
 	}

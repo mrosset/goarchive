@@ -68,7 +68,7 @@ func (z *Tar) Peek(cr io.Reader) (dir string, err error) {
 }
 
 // Decompress bzip2 or gzip Reader to destination directory
-func (z *Tar) Untar(dest string, cr io.Reader) (err error) {
+func (z *Tar) Untar(cr io.Reader, dest string) (err error) {
 	tr := tar.NewReader(cr)
 	for {
 		hdr, err := tr.Next()
