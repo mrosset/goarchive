@@ -3,16 +3,54 @@ package goarchive
 import (
 	"archive/tar"
 	"bytes"
+	"compress/bzip2"
+	"compress/gzip"
 	. "fmt"
 	"io"
+	"log"
 	"os"
+	"os/exec"
 	"path"
+	"strings"
 )
 
 // Struct used to decompress 
 type Tar struct {
 	Verbose bool
 	Debug   bool
+}
+
+const (
+	Bzip = "application/x-bzip2"
+	Gz   = "application/x-gzip"
+)
+
+func init() {
+	log.SetPrefix("goarchive: ")
+	log.SetFlags(0)
+
+}
+func GetReader(path string) (r io.Reader, err error) {
+	magic, err := fileMagic(path)
+	if err != nil {
+		return nil, err
+	}
+	fd, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	switch magic {
+	case Bzip:
+		log.Println("using bzip reader for", path)
+		r = bzip2.NewReader(fd)
+	case Gz:
+		log.Println("using gzip reader for", path)
+		r, err = gzip.NewReader(fd)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return r, err
 }
 
 // Returns a new Zip struct
@@ -140,4 +178,13 @@ func fileExists(path string) bool {
 		return true
 	}
 	return false
+}
+
+func fileMagic(path string) (string, error) {
+	output, err := exec.Command("file", "-b", "-i", path).Output()
+	if err != nil {
+		return "", err
+	}
+	mime := strings.Split(string(output), " ")
+	return mime[0][:len(mime[0])-1], nil
 }

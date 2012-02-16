@@ -1,12 +1,8 @@
 package goarchive
 
 import (
-	"compress/bzip2"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"os"
-	"path"
 	"testing"
 )
 
@@ -84,16 +80,9 @@ var printf = fmt.Printf
 func TestDecompress(t *testing.T) {
 	for _, zt := range tests {
 		tar := NewTar()
-		var cr io.Reader
-		f, err := os.Open(zt.zipFile)
-		handleError(err, t)
-		defer f.Close()
-		switch path.Ext(zt.zipFile) {
-		case ".bz2":
-			cr = bzip2.NewReader(f)
-		case ".gz":
-			cr, err = gzip.NewReader(f)
-			handleError(err, t)
+		cr, err := GetReader(zt.zipFile)
+		if err != nil {
+			t.Error(err)
 		}
 		if err := tar.Untar(tmpDir, cr); err != nil {
 			t.Errorf("Decompress %v : Unexpected error: %v", zt.name, err)
@@ -104,16 +93,9 @@ func TestDecompress(t *testing.T) {
 func TestPeek(t *testing.T) {
 	for _, zt := range tests {
 		tar := NewTar()
-		var cr io.Reader
-		f, err := os.Open(zt.zipFile)
-		handleError(err, t)
-		defer f.Close()
-		switch path.Ext(zt.zipFile) {
-		case ".bz2":
-			cr = bzip2.NewReader(f)
-		case ".gz":
-			cr, err = gzip.NewReader(f)
-			handleError(err, t)
+		cr, err := GetReader(zt.zipFile)
+		if err != nil {
+			t.Error(err)
 		}
 		if dir, _ := tar.Peek(cr); dir != zt.name {
 			t.Errorf("Peek expected %v got %v", zt.name, dir)
