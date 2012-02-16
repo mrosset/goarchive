@@ -7,7 +7,6 @@ import (
 	"compress/gzip"
 	. "fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -25,11 +24,6 @@ const (
 	Gz   = "application/x-gzip"
 )
 
-func init() {
-	log.SetPrefix("goarchive: ")
-	log.SetFlags(0)
-
-}
 func GetReader(path string) (r io.Reader, err error) {
 	magic, err := fileMagic(path)
 	if err != nil {
@@ -41,10 +35,8 @@ func GetReader(path string) (r io.Reader, err error) {
 	}
 	switch magic {
 	case Bzip:
-		log.Println("using bzip reader for", path)
 		r = bzip2.NewReader(fd)
 	case Gz:
-		log.Println("using gzip reader for", path)
 		r, err = gzip.NewReader(fd)
 		if err != nil {
 			return nil, err
