@@ -122,7 +122,7 @@ func TestPeek(t *testing.T) {
 
 }
 
-func handleError(err os.Error, t *testing.T) {
+func handleError(err error, t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
