@@ -142,7 +142,7 @@ func mkDir(path string, mode int64) (err error) {
 
 // Write file from tar reader
 func writeFile(path string, hdr *tar.Header, tr *tar.Reader) (err error) {
-	f, err := os.Create(path)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, os.FileMode(hdr.Mode))
 	if err != nil {
 		return err
 	}
